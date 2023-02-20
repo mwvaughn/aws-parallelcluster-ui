@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - fix/log4brains-push
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
@@ -12,14 +13,17 @@ jobs:
         with:
           persist-credentials: false # required by JamesIves/github-pages-deploy-action
           fetch-depth: 0 # required by Log4brains to work correctly (needs the whole Git history)
-      - name: Install Node
-        uses: actions/setup-node@v1
+      - uses: actions/setup-node@v3
+        name: Setup Node version
         with:
-          node-version: "14"
+          node-version-file: frontend/.nvmrc
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
       - name: Install and Build Log4brains
         run: |
-          npm install -g log4brains
-          log4brains build --basePath /${GITHUB_REPOSITORY#*/}/log4brains
+          npm install log4brains
+          npx log4brains build --basePath /${GITHUB_REPOSITORY#*/}/log4brains
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@3.7.1
         with:
