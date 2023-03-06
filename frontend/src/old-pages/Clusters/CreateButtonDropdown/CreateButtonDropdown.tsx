@@ -14,9 +14,16 @@ import {
   ButtonDropdownProps,
 } from '@cloudscape-design/components'
 import {CancelableEventHandler} from '@cloudscape-design/components/internal/events'
-import React, {useMemo} from 'react'
+import React, {useCallback, useMemo} from 'react'
 import {useTranslation} from 'react-i18next'
 import {NavigateFunction, useNavigate} from 'react-router-dom'
+import {setState} from '../../../store'
+import loadTemplate from '../../Configure/util'
+import {HiddenUploader} from '../../../components/FileChooser'
+// @ts-expect-error TS(7016) FIXME: Could not find a declaration file for module 'js-y... Remove this comment to see the full error message
+import jsyaml from 'js-yaml'
+
+const loadingPath = ['app', 'wizard', 'source', 'loading']
 
 interface Props {
   openWizard: (navigate: NavigateFunction) => void
@@ -24,8 +31,19 @@ interface Props {
 
 export const CreateButtonDropdown: React.FC<Props> = ({openWizard}) => {
   const {t} = useTranslation()
+  const [isFileDialogOpen, setIsFileDialogOpen] = React.useState(false)
 
   const navigate = useNavigate()
+
+  const onFileChange = useCallback(
+    (data: string) => {
+      setIsFileDialogOpen(false)
+      setState(loadingPath, true)
+      loadTemplate(jsyaml.load(data), () => setState(loadingPath, false))
+      openWizard(navigate)
+    },
+    [navigate, openWizard],
+  )
 
   const onCreateClick: CancelableEventHandler<ButtonDropdownProps.ItemClickDetails> =
     React.useCallback(
@@ -33,6 +51,9 @@ export const CreateButtonDropdown: React.FC<Props> = ({openWizard}) => {
         switch (detail.id) {
           case 'wizard':
             openWizard(navigate)
+            return
+          case 'template':
+            setIsFileDialogOpen(true)
             return
         }
       },
@@ -44,6 +65,10 @@ export const CreateButtonDropdown: React.FC<Props> = ({openWizard}) => {
       {
         id: 'wizard',
         text: t('cluster.list.actions.createFromWizard'),
+      },
+      {
+        id: 'template',
+        text: t('cluster.list.actions.createFromTemplate'),
       },
     ],
     [t],
@@ -58,6 +83,7 @@ export const CreateButtonDropdown: React.FC<Props> = ({openWizard}) => {
       >
         {t('cluster.list.actions.create')}
       </ButtonDropdown>
+      <HiddenUploader open={isFileDialogOpen} onChange={onFileChange} />
     </>
   )
 }
