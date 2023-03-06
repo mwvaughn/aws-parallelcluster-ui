@@ -17,13 +17,22 @@ import {CancelableEventHandler} from '@cloudscape-design/components/internal/eve
 import React, {useCallback, useMemo} from 'react'
 import {useTranslation} from 'react-i18next'
 import {NavigateFunction, useNavigate} from 'react-router-dom'
+import {GetConfiguration} from '../../../model'
 import {setState} from '../../../store'
 import loadTemplate from '../../Configure/util'
 import {HiddenUploader} from '../../../components/FileChooser'
 // @ts-expect-error TS(7016) FIXME: Could not find a declaration file for module 'js-y... Remove this comment to see the full error message
 import jsyaml from 'js-yaml'
+import {FromClusterModal} from '../FromClusterModal/FromClusterModal'
 
 const loadingPath = ['app', 'wizard', 'source', 'loading']
+
+function copyFrom(sourceClusterName: any) {
+  setState(loadingPath, true)
+  GetConfiguration(sourceClusterName, (configuration: any) => {
+    loadTemplate(jsyaml.load(configuration), () => setState(loadingPath, false))
+  })
+}
 
 interface Props {
   openWizard: (navigate: NavigateFunction) => void
@@ -32,8 +41,21 @@ interface Props {
 export const CreateButtonDropdown: React.FC<Props> = ({openWizard}) => {
   const {t} = useTranslation()
   const [isFileDialogOpen, setIsFileDialogOpen] = React.useState(false)
+  const [isModalVisible, setIsModalVisible] = React.useState(false)
 
   const navigate = useNavigate()
+
+  const onDismiss = useCallback(() => {
+    setIsModalVisible(false)
+  }, [])
+
+  const onCreate = useCallback(
+    (name: string) => {
+      copyFrom(name)
+      openWizard(navigate)
+    },
+    [navigate, openWizard],
+  )
 
   const onFileChange = useCallback(
     (data: string) => {
@@ -55,6 +77,9 @@ export const CreateButtonDropdown: React.FC<Props> = ({openWizard}) => {
           case 'template':
             setIsFileDialogOpen(true)
             return
+          case 'from-cluster':
+            setIsModalVisible(true)
+            return
         }
       },
       [navigate, openWizard],
@@ -70,6 +95,10 @@ export const CreateButtonDropdown: React.FC<Props> = ({openWizard}) => {
         id: 'template',
         text: t('cluster.list.actions.createFromTemplate'),
       },
+      {
+        id: 'from-cluster',
+        text: t('cluster.list.actions.createFromCluster'),
+      },
     ],
     [t],
   )
@@ -84,6 +113,11 @@ export const CreateButtonDropdown: React.FC<Props> = ({openWizard}) => {
         {t('cluster.list.actions.create')}
       </ButtonDropdown>
       <HiddenUploader open={isFileDialogOpen} onChange={onFileChange} />
+      <FromClusterModal
+        visible={isModalVisible}
+        onDismiss={onDismiss}
+        onCreate={onCreate}
+      />
     </>
   )
 }
