@@ -47,13 +47,6 @@ import InfoLink from '../../components/InfoLink'
 const sourcePath = ['app', 'wizard', 'source']
 const sourceErrorsPath = ['app', 'wizard', 'errors', 'source']
 
-function copyFrom(sourceClusterName: any) {
-  const loadingPath = ['app', 'wizard', 'source', 'loading']
-  GetConfiguration(sourceClusterName, (configuration: any) => {
-    loadTemplate(jsyaml.load(configuration), () => setState(loadingPath, false))
-  })
-}
-
 function sourceValidate(suppressUpload = false) {
   let clusterName = getState(['app', 'wizard', 'clusterName'])
   const clusters = getState(['clusters', 'list']) || []
@@ -293,10 +286,6 @@ function Source() {
                     ),
                   },
                 ]}
-              />
-              <HiddenUploader
-                callbackPath={['app', 'wizard', 'source', 'upload']}
-                handleData={handleUpload}
               />
             </SpaceBetween>
           </Container>
