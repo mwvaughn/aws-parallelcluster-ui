@@ -19,9 +19,10 @@ import {useTranslation} from 'react-i18next'
 interface Props {
   open: boolean
   onChange: (data: string) => void
+  onDismiss: () => void
 }
 
-function HiddenUploader({onChange, open}: Props) {
+function HiddenUploader({onChange, onDismiss, open}: Props) {
   const hiddenFileInput = useRef<HTMLInputElement>(null)
 
   const handleClick = useCallback(() => {
@@ -53,8 +54,16 @@ function HiddenUploader({onChange, open}: Props) {
   useEffect(() => {
     if (open) {
       handleClick()
+      /**
+       * Immediately dismiss the selector,
+       * to allow callers to reset the `open` prop.
+       *
+       * This is needed as there is no way to intercept
+       * actual cancel event on the brower's file picker
+       */
+      onDismiss()
     }
-  }, [handleClick, open])
+  }, [handleClick, onDismiss, open])
 
   return (
     <input

@@ -45,7 +45,7 @@ export const CreateButtonDropdown: React.FC<Props> = ({openWizard}) => {
 
   const navigate = useNavigate()
 
-  const onDismiss = useCallback(() => {
+  const onModalDismiss = useCallback(() => {
     setIsModalVisible(false)
   }, [])
 
@@ -56,6 +56,10 @@ export const CreateButtonDropdown: React.FC<Props> = ({openWizard}) => {
     },
     [navigate, openWizard],
   )
+
+  const onFileSelectorDismiss = useCallback(() => {
+    setIsFileDialogOpen(false)
+  }, [])
 
   const onFileChange = useCallback(
     (data: string) => {
@@ -112,10 +116,14 @@ export const CreateButtonDropdown: React.FC<Props> = ({openWizard}) => {
       >
         {t('cluster.list.actions.create')}
       </ButtonDropdown>
-      <HiddenUploader open={isFileDialogOpen} onChange={onFileChange} />
+      <HiddenUploader
+        open={isFileDialogOpen}
+        onDismiss={onFileSelectorDismiss}
+        onChange={onFileChange}
+      />
       <FromClusterModal
         visible={isModalVisible}
-        onDismiss={onDismiss}
+        onDismiss={onModalDismiss}
         onCreate={onCreate}
       />
     </>
